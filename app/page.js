@@ -15,6 +15,9 @@ import {
 // ⚠️ 아래 값을 본인 이름으로 바꿔서 제출하세요.
 const MAKER_NAME = '희현';
 
+// 운영자 비밀번호: 마감시간 변경 / 결과 초기화 시 필요합니다.
+const ADMIN_PASSWORD = 'qwer1234';
+
 const DEFAULT_OPTIONS = [
   { id: 'a', label: '치킨' },
   { id: 'b', label: '피자' },
@@ -63,6 +66,19 @@ export default function Page() {
   const [selected, setSelected] = useState(null);
   const [now, setNow] = useState(new Date());
   const [hydrated, setHydrated] = useState(false);
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+
+  const unlockAdmin = () => {
+    if (adminUnlocked) return true;
+    const input = window.prompt('운영자 비밀번호를 입력하세요');
+    if (input === null) return false;
+    if (input === ADMIN_PASSWORD) {
+      setAdminUnlocked(true);
+      return true;
+    }
+    window.alert('비밀번호가 올바르지 않습니다.');
+    return false;
+  };
 
   // 저장된 상태 불러오기
   useEffect(() => {
@@ -125,6 +141,7 @@ export default function Page() {
   };
 
   const resetVotes = () => {
+    if (!unlockAdmin()) return;
     if (!window.confirm('모든 투표 기록을 초기화할까요?')) return;
     setVotes([]);
   };
@@ -143,6 +160,12 @@ export default function Page() {
             type="datetime-local"
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
+            onFocus={(e) => {
+              if (!adminUnlocked) {
+                e.target.blur();
+                unlockAdmin();
+              }
+            }}
             disabled={isClosed}
           />
           <span className={`status-badge ${isClosed ? 'status-closed' : 'status-open'}`}>
@@ -150,6 +173,9 @@ export default function Page() {
           </span>
         </div>
         {!isClosed && remaining && <div className="countdown">⏳ {remaining}</div>}
+        {!adminUnlocked && (
+          <div className="hint">🔒 마감시간을 바꾸려면 클릭 시 운영자 비밀번호가 필요해요.</div>
+        )}
       </div>
 
       <div className="card">
